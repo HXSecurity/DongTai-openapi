@@ -64,9 +64,9 @@ class ApiRouteHandler(IReportHandler):
                         response_obj = _response_dump(
                             {'return_type': api_route['return_type']},
                             api_route_model)
+                        IastApiResponse.objects.create(**response_obj)
                     except:
                         transaction.savepoint_rollback(sid)
-                    IastApiResponse.objects.create(**response_obj)
                 logger.info(_('API导航日志记录成功'))
         except Exception as e:
             logger.info(_('API导航日志失败，原因:{}').format(e))
