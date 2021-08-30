@@ -71,7 +71,9 @@ def build_request_header(req_method, raw_req_header, uri, query_params, http_pro
 
 STATUSMAP = {True: 1, False: 0}
 
+
 def checkossstatus():
+    from apiserver.views.agent_download import JavaAgentDownload, PythonAgentDownload
     try:
         auth = oss2.Auth(settings.ACCESS_KEY, settings.ACCESS_KEY_SECRET)
         bucket = oss2.Bucket(auth,
@@ -79,6 +81,9 @@ def checkossstatus():
                              settings.BUCKET_NAME,
                              connect_timeout=2)
         bucket.list_objects()
+        downloadstatus = JavaAgentDownload.download_agent(
+        ) and PythonAgentDownload.download_agent()
+        return downloadstatus, None
     except RequestError:
         return False, None
     except Exception as e:
