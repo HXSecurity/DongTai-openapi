@@ -88,8 +88,6 @@ def checkossstatus():
         OssDownloader.download_file(
             object_name=PythonAgentDownload.REMOTE_AGENT_FILE,
             local_file=PythonAgentDownload.LOCAL_AGENT_FILE)
-        OssDownloader.download_file(JavaAgentDownload.REMOTE_AGENT_FILE,
-                                    JavaAgentDownload.LOCAL_AGENT_FILE)
         for package_name in ('iast-core', 'iast-inject', 'dongtai-servlet'):
             OssDownloader.download_file(
                 EngineDownloadEndPoint.REMOTE_AGENT_FILE.format(
