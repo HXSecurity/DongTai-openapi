@@ -16,6 +16,7 @@ from dongtai.endpoint import OpenApiEndPoint, R
 # note: 当前依赖必须保留，否则无法通过hooktype反向查找策略
 
 logger = logging.getLogger("django")
+JAVA = 1
 
 
 class HookProfilesEndPoint(OpenApiEndPoint):
@@ -23,9 +24,9 @@ class HookProfilesEndPoint(OpenApiEndPoint):
     description = "获取HOOK策略"
 
     @staticmethod
-    def get_profiles(user=None):
+    def get_profiles(user=None, language_id=JAVA):
         profiles = list()
-        hook_types = HookType.objects.all()
+        hook_types = HookType.objects.filter(language_id=language_id).all()
         for hook_type in hook_types:
             strategy_details = list()
             profiles.append({
@@ -34,8 +35,9 @@ class HookProfilesEndPoint(OpenApiEndPoint):
                 'value': hook_type.value,
                 'details': strategy_details
             })
-            strategies = hook_type.strategies.filter(created_by__in=[1, user.id] if user else [1],
-                                                     enable=const.HOOK_TYPE_ENABLE)
+            strategies = hook_type.strategies.filter(
+                created_by__in=[1, user.id] if user else [1],
+                enable=const.HOOK_TYPE_ENABLE)
             for strategy in strategies:
                 strategy_details.append({
                     "source": strategy.source,
@@ -53,7 +55,9 @@ class HookProfilesEndPoint(OpenApiEndPoint):
         :return:
         """
         user = request.user
-        profiles = self.get_profiles(user)
+        language_id = request.query_params.get('language_id', None)
+        language_id = JAVA if language_id is None else language_id
+        profiles = self.get_profiles(user, language_id)
 
         return R.success(data=profiles)
 
