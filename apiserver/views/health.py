@@ -15,7 +15,7 @@ from oss2.exceptions import RequestError
 import requests
 from requests.exceptions import ConnectionError, ConnectTimeout
 import json
-from apiserver.utils import updateossstatus
+from apiserver.utils import checkossstatus
 logger = logging.getLogger("dongtai.openapi")
 
 
@@ -36,7 +36,7 @@ def _checkenginestatus():
 
 class HealthView(OpenApiEndPoint):
     def get(self, request):
-        oss_status, _ = updateossstatus()
+        oss_status, _ = checkossstatus()
         statusmap = {True: 1, False: 0}
         engine_status, engine_resp = _checkenginestatus()
         data = {
