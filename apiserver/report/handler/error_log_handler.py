@@ -35,6 +35,6 @@ class ErrorLogHandler(IReportHandler):
                 state='已上报',
                 dt=int(time.time())
             )
-            logger.info(_('错误日志报告保存成功'))
+            logger.info(_('Error log report saving success'))
         except Exception as e:
-            logger.info(_('错误日志报告保存失败，原因：e').format(e)
+            logger.info(_('Error log report saves failed, why: e').format(e)

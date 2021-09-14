@@ -64,7 +64,7 @@ class IReportHandler:
         return msg if msg else ''
 
     def handle(self, report, user):
-        logger.info(_('[{}]报告解析开始').format(self.__class__.__name__))
+        logger.info(_('[{}] Report resolution start').format(self.__class__.__name__))
         self.report = report
         self.user_id = user
         self.common_header()
@@ -72,12 +72,12 @@ class IReportHandler:
             self.parse()
             self.save()
             logger.info(
-                _('[{self.__class__.__name__}]报告解析完成').format(
+                _('[{self .__ class __.__ name__}] Report Analysis Completed').format(
                     self.__class__.__name__))
             return self.get_result()
         else:
             logger.info(
-                _('[{self.__class__.__name__}]报告解析失败，Agent不存在或无权访问，报告数据：{}').
+                _('[{self .__}] report resolution failed, Agent does not exist or no right to access, report data: {}').
                 format(self.__class__.__name__, self.report))
             return 'no permission'
 

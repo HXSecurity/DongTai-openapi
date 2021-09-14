@@ -45,7 +45,7 @@ class JavaAgentDownload():
                 )
             return True
         except Exception as e:
-            logger.error(_('agent配置文件创建失败，原因：{e}').format(e))
+            logger.error(_('Agent configuration file creation failed, reason: {E}').format(e))
             return False
 
     @staticmethod
@@ -192,6 +192,6 @@ class AgentDownload(OpenApiEndPoint):
                 return R.failure(msg="agent file not exit.")
         except Exception as e:
             logger.error(
-                _('agent下载失败，用户: {}，错误详情：{}').format(
+                _('Agent download failed, user: {}, error details: {}').format(
                     request.user.get_username()), e)
             return R.failure(msg="agent file not exit.")

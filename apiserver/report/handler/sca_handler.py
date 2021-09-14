@@ -34,7 +34,7 @@ class ScaHandler(IReportHandler):
     def save(self):
         if all([self.agent_id, self.package_path, self.package_name, self.package_signature,
                 self.package_algorithm]) is False:
-            logger.warning(_("数据不完整，数据：{}").format(json.dumps(self.report)))
+            logger.warning(_("Data is incomplete, data: {}").format(json.dumps(self.report)))
         else:
             if self.agent:
                 smd = ScaMavenDb.objects.filter(sha_1=self.package_signature).values("version", "aql").first()
@@ -82,4 +82,4 @@ class ScaHandler(IReportHandler):
                             agent=self.agent
                         )
                 except Exception as e:
-                    logger.error(_('sca数据解析失败，原因：{}').format(e))
+                    logger.error(_('SCA data resolution failed, reasons: {}').format(e))

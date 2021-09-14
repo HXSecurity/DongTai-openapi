@@ -114,7 +114,7 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
         try:
             port = int(server_port)
         except Exception as e:
-            logger.error(_('服务器端口不存在，已设置为默认值：0'))
+            logger.error(_('The server port does not exist, has been set to the default: 0'))
             port = 0
 
         server_id = agent.server_id
@@ -150,7 +150,7 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
             )
             agent.server_id = server.id
             agent.save(update_fields=['server_id'])
-            logger.info(_('服务器记录创建成功'))
+            logger.info(_('Server record creation success'))
 
     def post(self, request: Request):
         """

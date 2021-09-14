@@ -77,13 +77,13 @@ class HeartBeatHandler(IReportHandler):
         try:
             project_agents = IastAgent.objects.values('id').filter(bind_project_id=self.agent.bind_project_id)
             if project_agents is None:
-                logger.info(_('项目下不存在探针'))
+                logger.info(_('There is no probe under the project'))
 
             replay_queryset = IastReplayQueue.objects.values(
                 'id', 'relation_id', 'uri', 'method', 'scheme', 'header', 'params', 'body', 'replay_type'
             ).filter(agent_id__in=project_agents, state=const.WAITING)[:10]
             if len(replay_queryset) == 0:
-                logger.info(_('重放请求不存在'))
+                logger.info(_('Replay request does not exist'))
 
             success_ids, success_vul_ids, failure_ids, failure_vul_ids, replay_requests = [], [], [], [], []
             for replay_request in replay_queryset:
@@ -103,11 +103,11 @@ class HeartBeatHandler(IReportHandler):
 
             IastVulnerabilityModel.objects.filter(id__in=success_vul_ids).update(latest_time=timestamp, status_id=2)
             IastVulnerabilityModel.objects.filter(id__in=failure_vul_ids).update(latest_time=timestamp, status_id=1)
-            logger.info(_('重放请求下发成功'))
+            logger.info(_('Reproduction request issued successfully'))
 
             return replay_requests
         except Exception as e:
-            logger.info(_('重放请求查询失败，原因：{}').format(e))
+            logger.info(_('Replay request query failed, reason: {}').format(e))
         return list()
 
     def save(self):
