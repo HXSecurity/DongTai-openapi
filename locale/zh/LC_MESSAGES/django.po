@@ -87,8 +87,8 @@ msgstr "注册报告类型{}的处理程序{}"
 
 #: apiserver/views/agent_download.py:48
 #, python-brace-format
-msgid "Agent configuration file creation failed, reason: {E}"
-msgstr "agent配置文件创建失败，原因：{e}"
+msgid "Agent configuration file creation failed, reason: {}"
+msgstr "agent配置文件创建失败，原因：{}"
 
 #: apiserver/views/agent_download.py:195
 msgid "Agent download failed, user: {}, error details: {}"

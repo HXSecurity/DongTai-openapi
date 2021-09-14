@@ -37,4 +37,4 @@ class ErrorLogHandler(IReportHandler):
             )
             logger.info(_('Error log report saving success'))
         except Exception as e:
-            logger.info(_('Error log report saves failed, why: e').format(e)
+            logger.info(_('Error log report saves failed, why: {}').format(e))
