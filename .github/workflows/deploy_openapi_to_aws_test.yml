@@ -56,18 +56,16 @@ jobs:
       - name: Setup Ossutil
         uses: manyuanrong/setup-ossutil@v2.0
         with:
-          # 填写Bucket所在地域的域名信息，可参考访问域名和数据中心。
           endpoint: ${{ secrets.ALIYUN_OSS_ENDPOINT }}
-          # AccessKeyID
           access-key-id: ${{ secrets.ALIYUN_OSS_KEY_ID }}
-          # AccessKeySceret
           access-key-secret: ${{ secrets.ALIYUN_OSS_KEY_SECRET }}
-      - run: |
-          ossutil cp oss://dongtai/agent/java/iast-agent-test.jar iast-agent.jar
-          ossutil cp oss://dongtai/agent/java/iast-core-test.jar iast-core.jar
-          ossutil cp oss://dongtai/agent/java/iast-inject-test.jar iast-inject.jar
-          ossutil cp oss://dongtai/agent/java/dongtai-servlet-test.jar dongtai-servlet.jar
-          ls -l
+          
+      - name: Download Agent
+        run: |
+          ossutil cp oss://dongtai/agent/java/iast-agent.jar iast-agent.jar
+          ossutil cp oss://dongtai/agent/java/iast-core.jar iast-core.jar
+          ossutil cp oss://dongtai/agent/java/iast-inject.jar iast-inject.jar
+          ossutil cp oss://dongtai/agent/java/dongtai-servlet.jar dongtai-servlet.jar
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -93,9 +91,3 @@ jobs:
           args: |
             find deploy/deploy-eks-iast-saas-openapi-test.yml -type f -exec sed -i 's/VERSION/0.1.${{github.run_number}}/g' {} \;
             ls deploy/deploy-eks-iast-saas-openapi-test.yml | xargs -I {} kubectl apply -f {}
-
-      - name: Build And Deploy Successfully
-        uses: joelwmale/webhook-action@master
-        with:
-          url: ${{ secrets.DONGTAI_WEBHOOK_URL }}
-          body: '{"msg_type": "interactive","card": {"config": {"wide_screen_mode": true,"enable_forward": true},"elements": [{"tag": "div","text": {"content": "状态：构建完成\n项目：${{github.repository}}\n分支：${{github.ref}}\n流程：${{github.workflow}}\n构建编号：${{github.run_number}}\n触发事件：${{github.event_name}}\n提交人：${{github.actor}}\nSHA-1：${{github.sha}}\n","tag": "lark_md"}}]}}'
