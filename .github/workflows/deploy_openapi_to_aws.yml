@@ -7,18 +7,18 @@ on:
     branches: [ main ]
 
 jobs:
-  Notify-For-Build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: joelwmale/webhook-action@master
-        with:
-          url: ${{ secrets.DONGTAI_WEBHOOK_URL }}
-          body: '{"msg_type": "interactive","card": {"config": {"wide_screen_mode": true,"enable_forward": true},"elements": [{"tag": "div","text": {"content": "状态：构建开始\n项目：${{github.repository}}\n分支：${{github.ref}}\n流程：${{github.workflow}}\n构建编号：${{github.run_number}}\n触发事件：${{github.event_name}}\n提交人：${{github.actor}}\nSHA-1：${{github.sha}}\n","tag": "lark_md"}}]}}'
+  # Notify-For-Build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: joelwmale/webhook-action@master
+  #       with:
+  #         url: ${{ secrets.DONGTAI_WEBHOOK_URL }}
+  #         body: '{"msg_type": "interactive","card": {"config": {"wide_screen_mode": true,"enable_forward": true},"elements": [{"tag": "div","text": {"content": "状态：构建开始\n项目：${{github.repository}}\n分支：${{github.ref}}\n流程：${{github.workflow}}\n构建编号：${{github.run_number}}\n触发事件：${{github.event_name}}\n提交人：${{github.actor}}\nSHA-1：${{github.sha}}\n","tag": "lark_md"}}]}}'
 
   Build-For-PORD:
     if: github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    needs: [Notify-For-Build]
+    # needs: [Notify-For-Build]
     strategy:
       max-parallel: 4
       matrix:
@@ -87,7 +87,7 @@ jobs:
     # The type of runner that the job will run on
     if: github.event.action == 'opened'
     runs-on: ubuntu-latest
-    needs: [Notify-For-Build]
+    # needs: [Notify-For-Build]
     strategy:
       max-parallel: 4
       matrix:
