@@ -58,11 +58,14 @@ jobs:
 
       - name: Setup Ossutil
         uses: manyuanrong/setup-ossutil@v2.0
-        with: 
+        with:
+          endpoint: "oss.aliyuncs.com"
+          access-key-id: "your_key_id"
+          access-key-secret: "your_key_secret"
+        with:
           endpoint: ${{ secrets.ALIYUN_OSS_ENDPOINT }}
           access-key-id: ${{ secrets.ALIYUN_OSS_KEY_ID }}
           access-key-secret: ${{ secrets.ALIYUN_OSS_KEY_SECRET }}
-
       - run: |
           ossutil cp oss://dongtai/agent/java/iast-agent.jar iast-agent.jar
           ossutil cp oss://dongtai/agent/java/iast-core.jar iast-core.jar
