@@ -9,10 +9,13 @@ import logging
 import os
 
 from django.http import FileResponse
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 
 from dongtai.endpoint import OpenApiEndPoint, R
+
+from apiserver.api_schema import DongTaiParameter
 from apiserver.utils import OssDownloader
 
 logger = logging.getLogger("dongtai.openapi")
@@ -25,14 +28,16 @@ class EngineDownloadEndPoint(OpenApiEndPoint):
     LOCAL_AGENT_FILE = '/tmp/iast_cache/package/{package_name}.jar'
     REMOTE_AGENT_FILE = 'agent/java/{package_name}.jar'
 
+    @extend_schema(
+        description='Agent Engine Download',
+        parameters=[
+            DongTaiParameter.ENGINE_NAME,
+        ],
+        responses=R,
+        methods=['GET']
+    )
     def get(self, request: Request):
-        """
-        IAST下载 agent接口
-        :param request:
-        :return:
-        """
-        package_name = request.query_params.get('package_name')
-        jdk = request.query_params.get('jdk.version')
+        package_name = request.query_params.get('engineName')
         if package_name not in ('iast-core', 'iast-inject', 'dongtai-servlet'):
             return R.failure({
                 "status": -1,

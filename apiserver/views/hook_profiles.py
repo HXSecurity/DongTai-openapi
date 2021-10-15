@@ -8,12 +8,14 @@ import logging
 
 from dongtai.models.hook_strategy import HookStrategy
 from dongtai.models.hook_type import HookType
+from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 
 from dongtai.utils import const
 from dongtai.endpoint import OpenApiEndPoint, R
 
 # note: 当前依赖必须保留，否则无法通过hooktype反向查找策略
+from apiserver.api_schema import DongTaiParameter
 
 logger = logging.getLogger("django")
 
@@ -46,13 +48,17 @@ class HookProfilesEndPoint(OpenApiEndPoint):
                 })
         return profiles
 
-    def get(self, request: Request):
-        """
-        IAST 检测引擎 agent接口
-        :param request:
-        :return:
-        """
+    @extend_schema(
+        description='Pull Agent Engine Hook Rule',
+        parameters=[
+            DongTaiParameter.LANGUAGE,
+        ],
+        responses=R,
+        methods=['GET']
+    )
+    def get(self, request):
         user = request.user
+        language = request.query_params.get('language')
         profiles = self.get_profiles(user)
 
         return R.success(data=profiles)
