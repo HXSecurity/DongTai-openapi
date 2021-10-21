@@ -208,6 +208,7 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
                             'scan_id': 5,
                             'agent_count': 0,
                             'mode': '插桩模式',
+                            'latest_time': int(time.time())
                         })
                     if created:
                         IastProjectVersion.objects.create(project_id=obj.id,
@@ -240,7 +241,7 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
                     register_time=int(time.time()))
             return R.success(data={'id': agent_id})
         except Exception as e:
-            logger.info(e)
+            logger.error(e)
             return R.failure(msg="探针注册失败，原因：{reason}".format(reason=e))
 
     @staticmethod
