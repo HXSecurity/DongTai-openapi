@@ -18,16 +18,17 @@ from dongtai.endpoint import OpenApiEndPoint, R
 from apiserver.api_schema import DongTaiParameter
 
 logger = logging.getLogger("django")
-
-
+JAVA = 1
+LANGUAGE_DICT= {'JAVA':1,'PYTHON':2,'PHP':3,'G0':4}
+                
 class HookProfilesEndPoint(OpenApiEndPoint):
     name = "api-v1-profiles"
     description = "获取HOOK策略"
 
     @staticmethod
-    def get_profiles(user=None):
+    def get_profiles(user=None, language_id=JAVA):
         profiles = list()
-        hook_types = HookType.objects.all()
+        hook_types = HookType.objects.filter(language_id=language_id).all()
         for hook_type in hook_types:
             strategy_details = list()
             profiles.append({
@@ -36,8 +37,9 @@ class HookProfilesEndPoint(OpenApiEndPoint):
                 'value': hook_type.value,
                 'details': strategy_details
             })
-            strategies = hook_type.strategies.filter(created_by__in=[1, user.id] if user else [1],
-                                                     enable=const.HOOK_TYPE_ENABLE)
+            strategies = hook_type.strategies.filter(
+                created_by__in=[1, user.id] if user else [1],
+                enable=const.HOOK_TYPE_ENABLE)
             for strategy in strategies:
                 strategy_details.append({
                     "source": strategy.source,
@@ -58,8 +60,11 @@ class HookProfilesEndPoint(OpenApiEndPoint):
     )
     def get(self, request):
         user = request.user
+
         language = request.query_params.get('language')
-        profiles = self.get_profiles(user)
+        language_id = LANGUAGE_DICT.get(language,None) if language is not None else None
+        language_id = JAVA if language_id is None and language is None else language_id
+        profiles = self.get_profiles(user, language_id)
 
         return R.success(data=profiles)
 
