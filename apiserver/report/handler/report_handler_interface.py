@@ -8,6 +8,7 @@ import logging
 
 from django.db.models import Q
 from dongtai.models.agent import IastAgent
+from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger('dongtai.openapi')
 
@@ -47,7 +48,7 @@ class IReportHandler:
 
     def common_header(self):
         self.detail = self.report.get('detail')
-        self.agent_id = self.detail.get('agent_id')
+        self.agent_id = self.detail.get('agentId')
 
     def has_permission(self):
         self.agent = self.get_agent(agent_id=self.agent_id)
@@ -63,17 +64,22 @@ class IReportHandler:
         return msg if msg else ''
 
     def handle(self, report, user):
-        logger.info(f'[{self.__class__.__name__}]报告解析开始')
+        logger.info(_('[{}] Report resolution start').format(self.__class__.__name__))
         self.report = report
         self.user_id = user
         self.common_header()
         if self.has_permission():
             self.parse()
             self.save()
-            logger.info(f'[{self.__class__.__name__}]报告解析完成')
+            logger.info(
+                _('[{classname}] Report Analysis Completed').format(
+                    classname=self.__class__.__name__))
             return self.get_result()
         else:
-            logger.info(f'[{self.__class__.__name__}]报告解析失败，Agent不存在或无权访问，报告数据：{self.report}')
+            logger.info(
+                _(
+                    '[{classname}] report resolution failed, Agent does not exist or no right to access, report data: {report}').
+                    format(classname=self.__class__.__name__, report=self.report))
             return 'no permission'
 
     def get_project_agents(self, agent):

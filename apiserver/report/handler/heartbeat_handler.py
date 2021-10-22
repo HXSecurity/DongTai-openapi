@@ -12,6 +12,7 @@ from dongtai.models.heartbeat import IastHeartbeat
 from dongtai.models.replay_queue import IastReplayQueue
 from dongtai.models.vulnerablity import IastVulnerabilityModel
 from dongtai.utils import const
+from django.utils.translation import gettext_lazy as _
 
 from apiserver.report.handler.report_handler_interface import IReportHandler
 from apiserver.report.report_handler_factory import ReportHandler
@@ -27,17 +28,17 @@ class HeartBeatHandler(IReportHandler):
         self.cpu = None
         self.memory = None
         self.network = None
-        self.disk = None
+        self.report_queue = None
+        self.method_queue = None
+        self.replay_queue = None
 
     def parse(self):
         self.cpu = self.detail.get('cpu')
         self.memory = self.detail.get('memory')
-        self.network = self.detail.get('network')
-        self.disk = self.detail.get('disk')
-        self.req_count = self.detail.get('req_count')
-        self.report_queue = self.detail.get('report_queue', 0)
-        self.method_queue = self.detail.get('method_queue', 0)
-        self.replay_queue = self.detail.get('replay_queue', 0)
+        self.req_count = self.detail.get('reqCount')
+        self.report_queue = self.detail.get('reportQueue', 0)
+        self.method_queue = self.detail.get('methodQueue', 0)
+        self.replay_queue = self.detail.get('replayQueue', 0)
 
     def save_heartbeat(self):
         # update agent state
@@ -50,21 +51,18 @@ class HeartBeatHandler(IReportHandler):
             heartbeat = queryset.first()
             heartbeat.memory = self.memory
             heartbeat.cpu = self.cpu
-            heartbeat.disk = self.disk
             heartbeat.req_count = self.req_count
             heartbeat.report_queue = self.report_queue
             heartbeat.method_queue = self.method_queue
             heartbeat.replay_queue = self.replay_queue
             heartbeat.dt = int(time.time())
             heartbeat.save(update_fields=[
-                'memory', 'cpu', 'disk', 'req_count', 'dt', 'report_queue',
-                'method_queue', 'replay_queue'
+                'memory', 'cpu', 'req_count', 'dt', 'report_queue', 'method_queue', 'replay_queue'
             ])
         else:
             queryset.delete()
             IastHeartbeat.objects.create(memory=self.memory,
                                          cpu=self.cpu,
-                                         disk=self.disk,
                                          req_count=self.req_count,
                                          report_queue=self.replay_queue,
                                          method_queue=self.method_queue,
@@ -76,13 +74,13 @@ class HeartBeatHandler(IReportHandler):
         try:
             project_agents = IastAgent.objects.values('id').filter(bind_project_id=self.agent.bind_project_id)
             if project_agents is None:
-                logger.info(f'项目下不存在探针')
+                logger.info(_('There is no probe under the project'))
 
             replay_queryset = IastReplayQueue.objects.values(
                 'id', 'relation_id', 'uri', 'method', 'scheme', 'header', 'params', 'body', 'replay_type'
             ).filter(agent_id__in=project_agents, state=const.WAITING)[:10]
             if len(replay_queryset) == 0:
-                logger.info(f'重放请求不存在')
+                logger.info(_('Replay request does not exist'))
 
             success_ids, success_vul_ids, failure_ids, failure_vul_ids, replay_requests = [], [], [], [], []
             for replay_request in replay_queryset:
@@ -102,11 +100,11 @@ class HeartBeatHandler(IReportHandler):
 
             IastVulnerabilityModel.objects.filter(id__in=success_vul_ids).update(latest_time=timestamp, status_id=2)
             IastVulnerabilityModel.objects.filter(id__in=failure_vul_ids).update(latest_time=timestamp, status_id=1)
-            logger.info(f'重放请求下发成功')
+            logger.info(_('Reproduction request issued successfully'))
 
             return replay_requests
         except Exception as e:
-            logger.info(f'重放请求查询失败，原因：{e}')
+            logger.info(_('Replay request query failed, reason: {}').format(e))
         return list()
 
     def save(self):

@@ -10,8 +10,11 @@ import uuid, logging
 
 from django.http import FileResponse
 from dongtai.endpoint import OpenApiEndPoint, R
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework.authtoken.models import Token
+from django.utils.translation import gettext_lazy as _
 
+from apiserver.api_schema import DongTaiParameter, DongTaiAuth
 from apiserver.utils import OssDownloader
 
 logger = logging.getLogger('dongtai.openapi')
@@ -44,7 +47,7 @@ class JavaAgentDownload():
                 )
             return True
         except Exception as e:
-            logger.error(f'agent配置文件创建失败，原因：{e}')
+            logger.error(_('Agent configuration file creation failed, reason: {E}').format(e))
             return False
 
     @staticmethod
@@ -167,6 +170,16 @@ class AgentDownload(OpenApiEndPoint):
         'java': JavaAgentDownload(),
     }
 
+    @extend_schema(
+        parameters=[
+            DongTaiParameter.OPENAPI_URL,
+            DongTaiParameter.PROJECT_NAME,
+            DongTaiParameter.LANGUAGE
+        ],
+        auth=[DongTaiAuth.TOKEN],
+        responses=[FileResponse],
+        methods=['GET']
+    )
     def get(self, request):
         try:
             base_url = request.query_params.get('url', 'https://www.huoxian.cn')
@@ -190,5 +203,7 @@ class AgentDownload(OpenApiEndPoint):
             else:
                 return R.failure(msg="agent file not exit.")
         except Exception as e:
-            logger.error(f'agent下载失败，用户: {request.user.get_username()}，错误详情：{e}')
+            logger.error(
+                _('Agent download failed, user: {}, error details: {}').format(
+                    request.user.get_username()), e)
             return R.failure(msg="agent file not exit.")

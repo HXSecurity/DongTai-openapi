@@ -12,9 +12,13 @@ from dongtai.models.agent import IastAgent
 from dongtai.models.project import IastProject
 from dongtai.models.project_version import IastProjectVersion
 from dongtai.models.server import IastServer
+from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
+from django.utils.translation import gettext_lazy as _
 
 from dongtai.endpoint import OpenApiEndPoint, R
+
+from apiserver.api_schema import DongTaiAuth, DongTaiParameter
 from apiserver.decrypter import parse_data
 
 logger = logging.getLogger('dongtai.openapi')
@@ -113,7 +117,7 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
         try:
             port = int(server_port)
         except Exception as e:
-            logger.error(f'服务器端口不存在，已设置为默认值：0')
+            logger.error(_('The server port does not exist, has been set to the default: 0'))
             port = 0
 
         server_id = agent.server_id
@@ -149,36 +153,48 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
             )
             agent.server_id = server.id
             agent.save(update_fields=['server_id'])
-            logger.info(f'服务器记录创建成功')
+            logger.info(_('Server record creation success'))
 
+    @extend_schema(
+        description='Agent Register, Data is Gzip',
+        parameters=[
+            DongTaiParameter.AGENT_NAME,
+            DongTaiParameter.LANGUAGE,
+            DongTaiParameter.VERSION,
+            DongTaiParameter.PROJECT_NAME,
+            DongTaiParameter.HOSTNAME,
+            DongTaiParameter.NETWORK,
+            DongTaiParameter.CONTAINER_NAME,
+            DongTaiParameter.CONTAINER_VERSION,
+            DongTaiParameter.SERVER_ADDR,
+            DongTaiParameter.SERVER_PORT,
+            DongTaiParameter.SERVER_PATH,
+            DongTaiParameter.SERVER_ENV,
+            DongTaiParameter.PID,
+        ],
+        responses=[
+            {204: None}
+        ],
+        methods=['POST']
+    )
     def post(self, request: Request):
-        """
-        IAST下载 agent接口s
-        :param request:
-        :return:
-        服务器作为agent的唯一值绑定
-        token: agent-ip-port-path
-        """
-        # 接受 token名称，version，校验token重复性，latest_time = now.time()
-        # 生成agent的唯一token
-        # 注册
         try:
             param = parse_data(request.read())
             token = param.get('name')
             language = param.get('language')
             version = param.get('version')
-            project_name = param.get('project_name', 'Demo Project').strip()
+            project_name = param.get('projectName', 'Demo Project').strip()
             if not token or not version or not project_name:
                 return R.failure(msg="参数错误")
 
             hostname = param.get('hostname')
             network = param.get('network')
-            container_name = param.get('container_name')
-            container_version = param.get('container_version')
-            server_addr = param.get('web_server_addr')
-            server_port = param.get('web_server_port')
-            server_path = param.get('web_server_path')
-            server_env = param.get('server_env')
+            container_name = param.get('containerName')
+            container_version = param.get('containerVersion')
+            server_addr = param.get('serverAddr')
+            server_port = param.get('serverPort')
+            server_path = param.get('serverPath')
+            server_env = param.get('serverEnv')
             pid = param.get('pid')
 
             user = request.user

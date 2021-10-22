@@ -22,7 +22,8 @@ class OssDownloader(object):
     BUCKET_NAME = 'dongtai'
 
     @staticmethod
-    def download_file_to_path(access_key, access_key_secret, bucket_url, bucket_name, object_name, local_file):
+    def download_file_to_path(access_key, access_key_secret, bucket_url, bucket_name, object_name, local_file,
+                              anonymous=True):
         """
 
         :param access_key:
@@ -34,7 +35,10 @@ class OssDownloader(object):
         :return:
         """
         try:
-            auth = oss2.Auth(access_key, access_key_secret)
+            if anonymous:
+                auth = oss2.AnonymousAuth()
+            else:
+                auth = oss2.Auth(access_key, access_key_secret)
             bucket = oss2.Bucket(auth, bucket_url, bucket_name)
             bucket.get_object_to_file(object_name, local_file)
             return True
@@ -72,16 +76,13 @@ def build_request_header(req_method, raw_req_header, uri, query_params, http_pro
 STATUSMAP = {True: 1, False: 0}
 
 
-def checkossstatus():
+def updateossstatus():
     from apiserver.views.agent_download import JavaAgentDownload, PythonAgentDownload
     from apiserver.views.engine_download import EngineDownloadEndPoint
     try:
-        auth = oss2.Auth(settings.ACCESS_KEY, settings.ACCESS_KEY_SECRET)
-        bucket = oss2.Bucket(auth,
-                             settings.BUCKET_URL,
-                             settings.BUCKET_NAME,
-                             connect_timeout=2)
-        bucket.list_objects()
+        status_, _ = checkossstatus()
+        if status_ == False:
+            return False, None
         OssDownloader.download_file(
             JavaAgentDownload.REMOTE_AGENT_FILE,
             local_file=JavaAgentDownload.LOCAL_AGENT_FILE)
@@ -100,6 +101,24 @@ def checkossstatus():
     except RequestError:
         return False, None
     except Exception as e:
-        logger.info("HealthView_checkossstatus:{}".format(e))
+        logger.info("Health check oss status:{}".format(e))
+        return False, None
+    return True, None
+
+
+def checkossstatus():
+    from apiserver.views.agent_download import JavaAgentDownload, PythonAgentDownload
+    from apiserver.views.engine_download import EngineDownloadEndPoint
+    try:
+        bucket = oss2.Bucket(oss2.AnonymousAuth(),
+                             settings.BUCKET_URL,
+                             settings.BUCKET_NAME,
+                             connect_timeout=4)
+        bucket.list_objects()
+        return True, None
+    except RequestError:
+        return False, None
+    except Exception as e:
+        logger.info("Health check oss status:{}".format(e))
         return False, None
     return True, None
