@@ -78,18 +78,19 @@ STATUSMAP = {True: 1, False: 0}
 
 def updateossstatus():
     from apiserver.views.agent_download import JavaAgentDownload, PythonAgentDownload
-    from apiserver.views.engine_download import EngineDownloadEndPoint
+    from apiserver.views.engine_download import EngineDownloadEndPoint, PACKAGE_NAME_LIST
     try:
-        status_, _ = checkossstatus()
-        if status_ == False:
-            return False, None
+        #status_, _ = checkossstatus()
+        #if status_ == False:
+        #    return False, None
+        print(JavaAgentDownload.REMOTE_AGENT_FILE)
         OssDownloader.download_file(
             JavaAgentDownload.REMOTE_AGENT_FILE,
             local_file=JavaAgentDownload.LOCAL_AGENT_FILE)
         OssDownloader.download_file(
             object_name=PythonAgentDownload.REMOTE_AGENT_FILE,
             local_file=PythonAgentDownload.LOCAL_AGENT_FILE)
-        for package_name in ('iast-core', 'iast-inject', 'dongtai-servlet'):
+        for package_name in PACKAGE_NAME_LIST:
             OssDownloader.download_file(
                 EngineDownloadEndPoint.REMOTE_AGENT_FILE.format(
                     package_name=package_name),
