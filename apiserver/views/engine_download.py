@@ -20,6 +20,9 @@ from apiserver.utils import OssDownloader
 
 logger = logging.getLogger("dongtai.openapi")
 
+PACKAGE_NAME_LIST = ('iast-core', 'iast-inject', 'dongtai-servlet-api',
+                     'dongtai-jakarta-api')
+
 
 class EngineDownloadEndPoint(OpenApiEndPoint):
     name = "download_core_jar_package"
