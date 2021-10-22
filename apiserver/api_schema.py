@@ -194,7 +194,8 @@ class DongTaiParameter:
     PID = OpenApiParameter(
         name='pid',
         type=str,
-        description='The development language of the project that needs to install the Agent',
+        description=
+        'The development language of the project that needs to install the Agent',
         required=True,
         examples=[
             OpenApiExample(
@@ -205,6 +206,23 @@ class DongTaiParameter:
         ],
     )
 
+    AUTO_CREATE_PROJECT = OpenApiParameter(
+        name='autoCreateProject',
+        type=int,
+        description=
+        'auto create project if project not found when this varibale is 1',
+        required=True,
+        examples=[
+            OpenApiExample(
+                'default value',
+                value=0,
+            ),
+            OpenApiExample(
+                'enable value',
+                value=1,
+            ),
+        ],
+    )
     ENGINE_NAME = OpenApiParameter(
         name='engineName',
         type=str,

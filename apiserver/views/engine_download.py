@@ -38,12 +38,20 @@ class EngineDownloadEndPoint(OpenApiEndPoint):
     )
     def get(self, request: Request):
         package_name = request.query_params.get('engineName')
-        if package_name not in ('iast-core', 'iast-inject', 'dongtai-servlet'):
+        try:
+            jakarta = int(request.query_params.get('jakarta', 0))
+        except:
+            jakarta = 0
+        if package_name not in ('iast-core', 'iast-inject', 'dongtai-api'):
             return R.failure({
                 "status": -1,
                 "msg": "bad gay."
             })
-
+        if package_name == 'dongtai-api':
+            if jakarta == 0:
+                package_name = 'dongtai-servlet-api'
+            elif jakarta == 1:
+                package_name = 'dongtai-jakarta-api'
         local_file_name = EngineDownloadEndPoint.LOCAL_AGENT_FILE.format(package_name=package_name)
         remote_file_name = EngineDownloadEndPoint.REMOTE_AGENT_FILE.format(package_name=package_name)
         logger.debug(f'download file from oss or local cache, file: {local_file_name}')

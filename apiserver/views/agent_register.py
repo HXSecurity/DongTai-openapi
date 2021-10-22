@@ -15,7 +15,8 @@ from dongtai.models.server import IastServer
 from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 from django.utils.translation import gettext_lazy as _
-
+from django.db import transaction
+import time
 from dongtai.endpoint import OpenApiEndPoint, R
 
 from apiserver.api_schema import DongTaiAuth, DongTaiParameter
@@ -40,7 +41,6 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
                 current_version=1,
                 status=1
             ).values("id").first()
-
             agent_id = AgentRegisterEndPoint.get_agent_id(token, project_name, user, project_current_version['id'])
             if agent_id == -1:
                 agent_id = AgentRegisterEndPoint.__register_agent(
@@ -171,6 +171,7 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
             DongTaiParameter.SERVER_PATH,
             DongTaiParameter.SERVER_ENV,
             DongTaiParameter.PID,
+            DongTaiParameter.AUTO_CREATE_PROJECT,
         ],
         responses=[
             {204: None}
@@ -196,15 +197,32 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
             server_path = param.get('serverPath')
             server_env = param.get('serverEnv')
             pid = param.get('pid')
-
+            auto_create_project = param.get('autoCreateProject', 0)
             user = request.user
-            agent_id = self.register_agent(
-                token=token,
-                version=version,
-                project_name=project_name,
-                language=language,
-                user=user
-            )
+            if auto_create_project:
+                with transaction.atomic():
+                    obj, created = IastProject.objects.get_or_create(
+                        name=project_name,
+                        user=request.user,
+                        defaults={
+                            'scan_id': 5,
+                            'agent_count': 0,
+                            'mode': '插桩模式',
+                            'latest_time': int(time.time())
+                        })
+                    if created:
+                        IastProjectVersion.objects.create(project_id=obj.id,
+                                                          user=request.user,
+                                                          version_name='V1.0',
+                                                          status=1,
+                                                          description='',
+                                                          current_version=1)
+                logger.info(_('auto create project {}').format(obj.id))
+            agent_id = self.register_agent(token=token,
+                                           version=version,
+                                           project_name=project_name,
+                                           language=language,
+                                           user=user)
 
             self.register_server(
                 agent_id=agent_id,
@@ -218,9 +236,12 @@ class AgentRegisterEndPoint(OpenApiEndPoint):
                 server_env=server_env,
                 pid=pid,
             )
-
+            if agent_id != -1:
+                IastAgent.objects.filter(pk=agent_id).update(
+                    register_time=int(time.time()))
             return R.success(data={'id': agent_id})
         except Exception as e:
+            logger.error(e)
             return R.failure(msg="探针注册失败，原因：{reason}".format(reason=e))
 
     @staticmethod
