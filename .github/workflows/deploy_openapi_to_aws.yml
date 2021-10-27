@@ -35,6 +35,13 @@ jobs:
         python-version: [3.7]
 
     steps:
+      
+      - name: Download Agent
+        run: |
+          ossutil cp oss://dongtai/agent/java/ ./ --include "*.jar" -r
+          ossutil cp oss://dongtai/agent/python/ ./  --include "*.tar.gz" -r
+          ls -a
+      
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -100,6 +107,7 @@ jobs:
         run: |
           ossutil cp oss://dongtai/agent/java/ ./ --include "*.jar" -r
           ossutil cp oss://dongtai/agent/python/ ./  --include "*.tar.gz" -r
+      
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
