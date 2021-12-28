@@ -11,7 +11,7 @@ from test.apiserver.test_agent_base import AgentTestCase,gzipdata
 from dongtai.models.agent import IastAgent
 from dongtai.models.agent_method_pool import MethodPool
 import gzip
-
+from django.utils.text import compress_sequence, compress_string
 
 class AgentMethodPoolTestCase(AgentTestCase):
 
@@ -1038,9 +1038,8 @@ class AgentMethodPoolTestCase(AgentTestCase):
         data['detail']['agentId'] = self.agent_id
         testdata = '11231231321331232131231312233hwqeqqwe'
         data['detail'][
-            'reqHeader'] = "Q29udGVudC1UeXBlPWFwcGxpY2F0aW9uL2pzb24KWC1GcmFtZS1PcHRpb25zPURFTlkKQ29udGVudC1MZW5ndGg9NjYKQ29udGVudC1lbmNvZGluZz1nemlwClgtQ29udGVudC1UeXBlLU9wdGlvbnM9bm9zbmlmZgpSZWZlcnJlci1Qb2xpY3k9c2FtZS1vcmlnaW4="
-        data['detail']['resBody'] = gzip_test_data = str(
-            gzip.compress(bytes(testdata, encoding='utf-8')))
+            'resHeader'] = "SFRUUC8xLjEgMjAwClgtQ29udGVudC1UeXBlLU9wdGlvbnM6bm9zbmlmZgpYLVhTUy1Qcm90ZWN0aW9uOjE7IG1vZGU9YmxvY2sKWC1GcmFtZS1PcHRpb25zOkRFTlkKQ29udGVudC1FbmNvZGluZzpnemlwCkNvbnRlbnQtU2VjdXJpdHktUG9saWN5OnNjcmlwdC1zcmMgJ3NlbGYnIGh0dHA6Ly8qOjgwODAgJ3Vuc2FmZS1pbmxpbmUnICd1bnNhZmUtZXZhbCc=" 
+        data['detail']['resBody'] = gzip_test_data = str(compress_string(testdata.encode('utf-8'))).replace('b','',1).strip('\'')
         data = gzipdata(data)
         response = self.client.post(
             'http://testserver/api/v1/report/upload',
@@ -1052,11 +1051,11 @@ class AgentMethodPoolTestCase(AgentTestCase):
         assert MethodPool.objects.filter(
             url="http://localhost:9999/sqli123132123313132321123231test",
             agent_id=self.agent_id).exists()
-        assert MethodPool.objects.filter(
+        assert not MethodPool.objects.filter(
             url="http://localhost:9999/sqli123132123313132321123231test",
             agent_id=self.agent_id,
             res_body=gzip_test_data).exists()
-        assert not MethodPool.objects.filter(
+        assert MethodPool.objects.filter(
             url="http://localhost:9999/sqli123132123313132321123231test",
             agent_id=self.agent_id,
             res_body=testdata).exists()

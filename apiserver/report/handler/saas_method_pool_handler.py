@@ -20,6 +20,7 @@ from apiserver import utils
 from apiserver.report.handler.report_handler_interface import IReportHandler
 from apiserver.report.report_handler_factory import ReportHandler
 import gzip
+from ast import literal_eval
 logger = logging.getLogger('dongtai.openapi')
 
 
@@ -152,7 +153,7 @@ class SaasMethodPoolHandler(IReportHandler):
                 http_protocol=self.http_protocol)
             method_pool.res_header = utils.base64_decode(self.http_res_header)
             method_pool.res_body = decode_content(
-                self.http_res_body, get_content_encoding(self.http_req_header))
+                self.http_res_body, get_content_encoding(self.http_res_header))
             method_pool.uri_sha1 = self.sha1(self.http_uri)
             method_pool.save(update_fields=[
                 'update_time',
@@ -189,7 +190,9 @@ class SaasMethodPoolHandler(IReportHandler):
                     query_params=self.http_query_string,
                     http_protocol=self.http_protocol),
                 res_header=utils.base64_decode(self.http_res_header),
-                res_body=self.http_res_body,
+                res_body=decode_content(
+                    self.http_res_body,
+                    get_content_encoding(self.http_res_header)),
                 context_path=self.context_path,
                 method_pool=json.dumps(self.method_pool),
                 pool_sign=pool_sign,
@@ -229,22 +232,27 @@ class SaasMethodPoolHandler(IReportHandler):
 
 
 def decode_content(body, content_type):
-    if content_type == 'gzip':
+    if 'gzip' in content_type:
         try:
-            return gzip.decompress(bytes(body, encoding='utf-8'))
-        except:
+            body_bytes = literal_eval('b\'' + body + '\'')
+            res = gzip.decompress(body_bytes)
+            return str(res).replace('b', '', 1).strip('\'')
+        except Exception as e:
+            logger.error('gzip file: {}'.format(body))
             logger.error('not gzip type but using gzip as content_encoding')
             return body
     return body
 
 
-def get_content_encoding(header):
-    headers = SaasMethodPoolHandler.parse_headers(header)
-    for header in headers:
+def get_content_encoding(raw_header):
+    headers = utils.base64_decode(raw_header)
+    logger.info(headers)
+    for header in headers.split('\n'):
         try:
-            k, v = header.strip().split(':')
-            if k.lower() == 'content-encoding':
+            k, v = header.strip().split(':', 1)
+            if 'content-encoding' == k.lower():
                 return v
-        except:
+        except Exception as e:
+            logger.error(e)
             pass
     return ''
