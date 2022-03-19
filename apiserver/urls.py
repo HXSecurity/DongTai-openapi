@@ -48,4 +48,4 @@ urlpatterns = [
 
 ]
 
-# urlpatterns = [path('api/v1/', include(urlpatterns), name='OpenAPI'), ]
+urlpatterns = [path('api/v1/', include(urlpatterns), name='OpenAPI'), ]
