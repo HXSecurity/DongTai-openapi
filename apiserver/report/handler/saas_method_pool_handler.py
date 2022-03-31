@@ -135,11 +135,15 @@ class SaasMethodPoolHandler(IReportHandler):
             pool_sign = self.calc_hash()
             current_version_agents = self.get_project_agents(self.agent)
             with transaction.atomic():
-                update_record, method_pool = self.save_method_call(
-                    pool_sign, current_version_agents)
+                try:
+                    update_record, method_pool = self.save_method_call(
+                        pool_sign, current_version_agents)
+                    self.send_to_engine(method_pool_id=method_pool.id,
+                                        update_record=update_record)
+                except Exception as e:
+                    pass
 
-            self.send_to_engine(method_pool_id=method_pool.id,
-                                update_record=update_record)
+
 
     def save_method_call(self, pool_sign, current_version_agents):
         """
@@ -266,7 +270,9 @@ def decode_content(body, content_encoding, version):
             return gzip.decompress(body).decode('utf-8')
         except:
             logger.error('not gzip type but using gzip as content_encoding')
-    logger.info('not found content_encoding :{}'.format(content_encoding))
+    # TODO not content_encoding
+    if content_encoding:
+        logger.info('not found content_encoding :{}'.format(content_encoding))
     try:
         return body.decode('utf-8')
     except:
