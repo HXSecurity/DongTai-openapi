@@ -138,11 +138,12 @@ class SaasMethodPoolHandler(IReportHandler):
                 try:
                     update_record, method_pool = self.save_method_call(
                         pool_sign, current_version_agents)
+                    self.send_to_engine(method_pool_id=method_pool.id,
+                                        update_record=update_record)
                 except Exception as e:
                     pass
 
-            self.send_to_engine(method_pool_id=method_pool.id,
-                                update_record=update_record)
+
 
     def save_method_call(self, pool_sign, current_version_agents):
         """
