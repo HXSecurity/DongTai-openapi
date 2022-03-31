@@ -8,6 +8,9 @@ import logging, requests, json
 from django.utils.translation import gettext_lazy as _
 from AgentServer import settings
 from dongtai.models.agent import IastAgent
+
+from core.web_hook import forward_for_upload
+
 logger = logging.getLogger('dongtai.openapi')
 
 
@@ -42,32 +45,17 @@ class ReportHandler:
 
                 IastAgent.objects.filter(user=user,id=agentId).update(is_core_running=is_core_running)
             # web hook
-            # print("[[[[[[[[[[")
-            # logger.info(f'[+] web hook 正在下发上报任务')
-            # forward_for_upload.delay(user.id, reports, report_type)
-            # logger.info(f'[+] web hook 上报任务下发完成')
             req = requests.post(
                 settings.AGENT_ENGINE_URL.format(user_id=user.id, report_type=report_type),
                 json=reports,
                 timeout=60)
-            # requests.get(
-            #     url=settings.SCA_ENGINE_URL.format(
-            #         agent_id=agent_id,
-            #         package_path=package_path,
-            #         package_signature=package_signature,
-            #         package_name=package_name,
-            #         package_algorithm=package_algorithm,
-            #     )
-            # )
-
             class_of_handler = ReportHandler.HANDLERS.get(report_type)
             if class_of_handler is None:
-                logger.error(_('Report type {} handler does not exist').format(report_type))
+                # logger.error(_('Report type {} handler does not exist').format(report_type))
                 return None
-            return class_of_handler().handle(reports, user)
+            result = class_of_handler().handle(reports, user)
+            return result
         except Exception as e:
-            print("=====")
-            print(e)
             logger.error(e)
         return None
 
